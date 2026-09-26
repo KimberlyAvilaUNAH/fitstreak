@@ -1,0 +1,38 @@
+﻿# .NET / C#
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.userosscache
+.vs/
+
+# Node / React
+node_modules/
+dist/
+build/
+.vite/
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# VS Code
+.vscode/
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker volumes
+postgres-data/
+pgdata/

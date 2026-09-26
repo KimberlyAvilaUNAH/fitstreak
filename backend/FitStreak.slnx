@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="FitStreak.API/FitStreak.API.csproj" />
+  <Project Path="FitStreak.Application/FitStreak.Application.csproj" />
+  <Project Path="FitStreak.Domain/FitStreak.Domain.csproj" />
+  <Project Path="FitStreak.Infrastructure/FitStreak.Infrastructure.csproj" />
+</Solution>
