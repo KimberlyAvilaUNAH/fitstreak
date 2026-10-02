@@ -1,4 +1,5 @@
 using DotNetEnv;
+using FitStreak.Application;
 using FitStreak.Infrastructure;
 using Scalar.AspNetCore;
 
@@ -9,6 +10,7 @@ Env.Load();
 var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__PostgresConnection")
                        ?? throw new InvalidOperationException("Falta la cadena de conexión.");
 
+builder.Services.AddApplication();              // <-- NUEVO
 builder.Services.AddInfrastructure(connectionString);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
@@ -18,7 +20,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference();  // UI moderna de Scalar
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();

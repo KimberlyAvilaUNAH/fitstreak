@@ -1,11 +1,28 @@
-### 1. Obtener todas las rutinas (Prueba GET)
+### 1. Obtener todas las rutinas (GET)
 GET http://localhost:5152/api/routines
 Accept: application/json
 
-### 2. Crear una nueva rutina (Prueba POST)
+### 2. Crear una rutina válida (POST - esperado: 201)
 POST http://localhost:5152/api/routines
 Content-Type: application/json
 
 {
+  "nombre": "Cardio 20 min"
+}
+
+### 3. Crear una rutina INVÁLIDA (POST - esperado: 400)
+POST http://localhost:5152/api/routines
+Content-Type: application/json
+
+{
+  "nombre": "ab"
+}
+
+### 4. Probar Over-posting (POST - el "id" debe ignorarse)
+POST http://localhost:5152/api/routines
+Content-Type: application/json
+
+{
+  "id": 999,
   "nombre": "Yoga 15 min"
 }

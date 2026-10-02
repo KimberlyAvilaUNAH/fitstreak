@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using FitStreak.Application.Interfaces;
 using FitStreak.Domain.Entities;
+using FitStreak.Application.Features.Rutinas.DTOs;
 
 namespace FitStreak.API.Controllers;
 
@@ -9,33 +11,55 @@ namespace FitStreak.API.Controllers;
 public class RoutinesController : ControllerBase
 {
     private readonly IRoutineRepository _repository;
+    private readonly IValidator<CreateRutinaRequestDto> _validator;
 
-    //Inyección de Dependencias
-    public RoutinesController(IRoutineRepository repository)
+    public RoutinesController(IRoutineRepository repository, IValidator<CreateRutinaRequestDto> validator)
     {
         _repository = repository;
+        _validator = validator;
     }
 
-    //Lectura de datos
     [HttpGet]
     public async Task<IActionResult> GetRoutines()
     {
         var routines = await _repository.GetAllAsync();
-        return Ok(routines); // HTTP 200 OK
+
+        // Mapeo Manual: Entidad -> DTO
+        var response = routines.Select(r => new RutinaResponseDto
+        {
+            Id = r.Id,
+            Nombre = r.Nombre
+        });
+
+        return Ok(response);
     }
 
-    //Creacion de un recurso
     [HttpPost]
-    public async Task<IActionResult> CreateRoutine([FromBody] RoutineGlobal routine)
+    public async Task<IActionResult> CreateRoutine([FromBody] CreateRutinaRequestDto request)
     {
-        if (string.IsNullOrWhiteSpace(routine.Nombre))
+        // 1. Ejecutar FluentValidation
+        var validationResult = await _validator.ValidateAsync(request);
+        if (!validationResult.IsValid)
         {
-            return BadRequest("El nombre de la rutina es obligatorio.");
+            return BadRequest(validationResult.Errors); // HTTP 400 con detalles
         }
 
-        var nuevaRoutine = await _repository.AddAsync(routine);
+        // 2. Mapeo Manual: DTO -> Entidad
+        var nuevaRoutine = new RoutineGlobal
+        {
+            Nombre = request.Nombre
+        };
 
-        //Retorna recurso recién creado
-        return CreatedAtAction(nameof(GetRoutines), new { id = nuevaRoutine.Id }, nuevaRoutine);
+        // 3. Persistencia
+        var routineCreada = await _repository.AddAsync(nuevaRoutine);
+
+        // 4. Mapeo de Retorno: Entidad -> DTO
+        var response = new RutinaResponseDto
+        {
+            Id = routineCreada.Id,
+            Nombre = routineCreada.Nombre
+        };
+
+        return CreatedAtAction(nameof(GetRoutines), new { id = response.Id }, response);
     }
 }
