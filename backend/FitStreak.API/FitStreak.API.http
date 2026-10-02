@@ -1,6 +1,11 @@
-@FitStreak.API_HostAddress = http://localhost:5152
-
-GET {{FitStreak.API_HostAddress}}/weatherforecast/
+### 1. Obtener todas las rutinas (Prueba GET)
+GET http://localhost:5152/api/routines
 Accept: application/json
 
-###
+### 2. Crear una nueva rutina (Prueba POST)
+POST http://localhost:5152/api/routines
+Content-Type: application/json
+
+{
+  "nombre": "Yoga 15 min"
+}
