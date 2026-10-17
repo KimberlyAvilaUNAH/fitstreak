@@ -11,55 +11,97 @@ namespace FitStreak.API.Controllers;
 public class RoutinesController : ControllerBase
 {
     private readonly IRoutineRepository _repository;
-    private readonly IValidator<CreateRutinaRequestDto> _validator;
+    private readonly IValidator<CreateRutinaRequestDto> _createValidator;
+    private readonly IValidator<UpdateRutinaRequestDto> _updateValidator;
 
-    public RoutinesController(IRoutineRepository repository, IValidator<CreateRutinaRequestDto> validator)
+    public RoutinesController(
+        IRoutineRepository repository, 
+        IValidator<CreateRutinaRequestDto> createValidator,
+        IValidator<UpdateRutinaRequestDto> updateValidator)
     {
         _repository = repository;
-        _validator = validator;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
+    // GET: api/routines
     [HttpGet]
     public async Task<IActionResult> GetRoutines()
     {
         var routines = await _repository.GetAllAsync();
-
-        // Mapeo Manual: Entidad -> DTO
-        var response = routines.Select(r => new RutinaResponseDto
-        {
-            Id = r.Id,
-            Nombre = r.Nombre
-        });
-
+        var response = routines.Select(r => new RutinaResponseDto { Id = r.Id, Nombre = r.Nombre });
         return Ok(response);
     }
 
+    // GET: api/routines/{id}
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetRoutineById(int id)
+    {
+        var routine = await _repository.GetByIdAsync(id);
+        
+        if (routine == null)
+        {
+            return NotFound("La rutina solicitada no existe."); 
+        }
+
+        var response = new RutinaResponseDto { Id = routine.Id, Nombre = routine.Nombre };
+        return Ok(response); 
+    }
+
+    // POST: api/routines
     [HttpPost]
     public async Task<IActionResult> CreateRoutine([FromBody] CreateRutinaRequestDto request)
     {
-        // 1. Ejecutar FluentValidation
-        var validationResult = await _validator.ValidateAsync(request);
+        var validationResult = await _createValidator.ValidateAsync(request);
         if (!validationResult.IsValid)
         {
-            return BadRequest(validationResult.Errors); // HTTP 400 con detalles
+            return BadRequest(validationResult.Errors);
         }
 
-        // 2. Mapeo Manual: DTO -> Entidad
-        var nuevaRoutine = new RoutineGlobal
-        {
-            Nombre = request.Nombre
-        };
-
-        // 3. Persistencia
+        var nuevaRoutine = new RoutineGlobal { Nombre = request.Nombre };
         var routineCreada = await _repository.AddAsync(nuevaRoutine);
+        var response = new RutinaResponseDto { Id = routineCreada.Id, Nombre = routineCreada.Nombre };
 
-        // 4. Mapeo de Retorno: Entidad -> DTO
-        var response = new RutinaResponseDto
+        return CreatedAtAction(nameof(GetRoutineById), new { id = response.Id }, response);
+    }
+
+    // PUT: api/routines/{id}
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateRoutine(int id, [FromBody] UpdateRutinaRequestDto request)
+    {
+        // Valida DTO
+        var validationResult = await _updateValidator.ValidateAsync(request);
+        if (!validationResult.IsValid)
         {
-            Id = routineCreada.Id,
-            Nombre = routineCreada.Nombre
-        };
+            return BadRequest(validationResult.Errors);
+        }
 
-        return CreatedAtAction(nameof(GetRoutines), new { id = response.Id }, response);
+        // Verifica si existe
+        var routine = await _repository.GetByIdAsync(id);
+        if (routine == null)
+        {
+            return NotFound("La rutina solicitada no existe."); 
+        }
+
+        // Mapea y actualiza
+        routine.Nombre = request.Nombre;
+        await _repository.UpdateAsync(routine);
+
+        return NoContent(); 
+    }
+
+    // DELETE: api/routines/{id}
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteRoutine(int id)
+    {
+        var routine = await _repository.GetByIdAsync(id);
+        if (routine == null)
+        {
+            return NotFound("La rutina solicitada no existe.");
+        }
+
+        await _repository.DeleteAsync(routine);
+
+        return NoContent();
     }
 }

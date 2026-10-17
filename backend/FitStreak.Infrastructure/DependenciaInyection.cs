@@ -10,13 +10,11 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, string connectionString)
     {
-        // 1. Configuramos el acceso a PostgreSQL
+        // Se configura el acceso a PostgreSQL
         services.AddDbContext<FitStreakDbContext>(options =>
             options.UseNpgsql(connectionString));
 
-        // 2. LA INYECCIÓN CLAVE:
-        // "Cada vez que un Chef (Controlador) pida la Receta (IRoutineRepository),
-        //  entrégale los datos de la Finca PostgreSQL (RoutineRepository)"
+        // Inyeccion
         services.AddScoped<IRoutineRepository, RoutineRepository>();
 
         return services;
