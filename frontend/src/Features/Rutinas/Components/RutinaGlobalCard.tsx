@@ -1,19 +1,7 @@
-﻿// src/components/RutinaGlobalCard.tsx
+﻿// src/features/rutinas/components/RutinaGlobalCard.tsx
+import type { RutinaGlobal } from '../Types/Rutina.types'
 
-// --- ZONA 1: EL CONTRATO (INTERFAZ EXPORTADA) ---
-// Espejo exacto de nuestra tabla RoutinesGlobales en PostgreSQL
-export interface RutinaGlobalProps {
-    id: number;
-    nombre: string;
-}
-
-// --- ZONA 2: LA FIRMA ---
-export function RutinaGlobalCard({ id, nombre }: RutinaGlobalProps) {
-
-    // --- ZONA 3: EL CEREBRO (LÓGICA) ---
-    // (Componente presentacional puro)
-
-    // --- ZONA 4: EL RENDERIZADO (APLICANDO DESIGN TOKENS VERDE/CREMA) ---
+export function RutinaGlobalCard({ id, nombre }: RutinaGlobal) {
     return (
         <article className="bg-[#4A5D3E] border border-[#5C704E] rounded-xl p-5 flex flex-col justify-between hover:border-[#A3B18A] transition-colors shadow-lg">
             <div>
