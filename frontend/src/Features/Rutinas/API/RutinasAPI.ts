@@ -1,18 +1,17 @@
 ﻿// src/features/rutinas/api/rutinasApi.ts
+import axios from 'axios'
 import type { RutinaGlobal } from '../Types/Rutina.types'
 
-export const obtenerRutinasGlobalesAsync = (): Promise<RutinaGlobal[]> => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            const datosCatalogo: RutinaGlobal[] = [
-                { id: 1, nombre: 'Cardio: 20 minutos de trote continuo' },
-                { id: 2, nombre: 'Fuerza: Tren superior (Pecho y Espalda)' },
-                { id: 3, nombre: 'Yoga y Flexibilidad matutina' },
-                { id: 4, nombre: 'HIIT: 15 minutos de alta intensidad' },
-                { id: 5, nombre: 'Fuerza: Tren inferior (Piernas)' },
-                { id: 6, nombre: 'Estiramientos y recuperación muscular' },
-            ]
-            resolve(datosCatalogo)
-        }, 1000) // Simula 1 segundo de latencia
-    })
+// 1. Instancia centralizada de Axios con la URL del .env
+export const apiClient = axios.create({
+    baseURL: import.meta.env.VITE_API_BASE_URL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+})
+
+// 2. Petición HTTP GET Real hacia el Backend (.NET -> PostgreSQL)
+export const obtenerRutinasGlobalesAsync = async (): Promise<RutinaGlobal[]> => {
+    const respuesta = await apiClient.get<RutinaGlobal[]>('/routines')
+    return respuesta.data
 }
