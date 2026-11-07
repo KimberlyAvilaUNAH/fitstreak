@@ -1,29 +1,35 @@
 ﻿// src/features/rutinas/components/CatalogoRutinasView.tsx
 import { useState, useEffect } from 'react'
 import type { RutinaGlobal } from '../Types/Rutina.types'
-import { obtenerRutinasGlobalesAsync } from '../API/RutinasAPI'
+import { obtenerRutinasGlobalesAsync, extraerMensajeErrorBackend } from '../API/RutinasAPI'
 import { RutinaGlobalCard } from './RutinaGlobalCard'
+import { CrearRutinaForm } from './CrearRutinaForm'
 
 export function CatalogoRutinasView() {
     const [rutinas, setRutinas] = useState<RutinaGlobal[]>([])
     const [cargando, setCargando] = useState<boolean>(true)
     const [errorRed, setErrorRed] = useState<string | null>(null)
     const [busqueda, setBusqueda] = useState<string>('')
+    const [mostrarFormulario, setMostrarFormulario] = useState<boolean>(false)
 
     useEffect(() => {
         obtenerRutinasGlobalesAsync()
-            .then((datosDesdePostgres) => {
-                setRutinas(datosDesdePostgres)
+            .then((datos) => {
+                setRutinas(datos)
                 setErrorRed(null)
             })
             .catch((error) => {
-                console.error('Fallo en la comunicación HTTP con .NET:', error)
-                setErrorRed('La comunicación fue rechazada o bloqueada por políticas de seguridad (CORS). Revisa la consola (F12).')
+                setErrorRed(extraerMensajeErrorBackend(error))
             })
             .finally(() => {
                 setCargando(false)
             })
     }, [])
+
+    const manejarRutinaCreada = (nuevaRutinaDesdeBD: RutinaGlobal) => {
+        setRutinas((rutinasActuales) => [...rutinasActuales, nuevaRutinaDesdeBD])
+        setMostrarFormulario(false)
+    }
 
     const rutinasFiltradas = rutinas.filter((rutina) =>
         rutina.nombre.toLowerCase().includes(busqueda.toLowerCase())
@@ -35,13 +41,26 @@ export function CatalogoRutinasView() {
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold text-[#F4F1E1]">Catálogo Global de Rutinas</h1>
                     <p className="text-[#A3B18A] text-sm mt-1">
-                        Conectado vía HTTP/CORS con <code className="text-[#8A9A5B] font-mono">PostgreSQL</code>.
+                        Conectado a <code className="text-[#8A9A5B] font-mono">PostgreSQL</code>.
                     </p>
                 </div>
-                <button className="bg-[#8A9A5B] hover:bg-[#A3B18A] text-[#242B1F] font-bold text-sm px-5 py-2.5 rounded-lg transition-colors shadow-sm self-start sm:self-auto cursor-pointer">
-                    + Nueva Rutina Global
-                </button>
+
+                {!mostrarFormulario && (
+                    <button
+                        onClick={() => setMostrarFormulario(true)}
+                        className="bg-[#8A9A5B] hover:bg-[#A3B18A] text-[#242B1F] font-bold text-sm px-5 py-2.5 rounded-lg transition-colors shadow-sm self-start sm:self-auto cursor-pointer"
+                    >
+                        + Nueva Rutina
+                    </button>
+                )}
             </div>
+
+            {mostrarFormulario && (
+                <CrearRutinaForm
+                    onRutinaCreada={manejarRutinaCreada}
+                    onCancelar={() => setMostrarFormulario(false)}
+                />
+            )}
 
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <input
@@ -52,11 +71,10 @@ export function CatalogoRutinasView() {
                     className="w-full sm:max-w-md bg-[#242B1F] border border-[#4A5D3E] rounded-lg px-4 py-2.5 text-sm text-[#F4F1E1] placeholder-[#7A8A68] focus:outline-none focus:border-[#8A9A5B] transition-colors"
                 />
                 <span className="text-xs text-[#A3B18A]">
-          Mostrando <strong className="text-[#F4F1E1]">{rutinasFiltradas.length}</strong> de {rutinas.length} registros en BD
+          Mostrando <strong className="text-[#F4F1E1]">{rutinasFiltradas.length}</strong> de {rutinas.length} registros
         </span>
             </div>
 
-            {/* 1. Estado de Carga */}
             {cargando && (
                 <div className="bg-[#4A5D3E]/50 border border-[#4A5D3E] rounded-xl p-12 text-center">
                     <p className="text-[#8A9A5B] font-semibold animate-pulse text-lg">
@@ -65,15 +83,13 @@ export function CatalogoRutinasView() {
                 </div>
             )}
 
-            {/* 2. Estado de Error (CORS) */}
             {!cargando && errorRed && (
                 <div className="bg-red-950/40 border border-red-500/40 rounded-xl p-6 text-center">
-                    <p className="text-red-400 font-bold text-base mb-1">🚨 Error de Comunicación Full-Stack</p>
+                    <p className="text-red-400 font-bold text-base mb-1">🚨 Error de Comunicación</p>
                     <p className="text-[#F4F1E1] text-sm">{errorRed}</p>
                 </div>
             )}
 
-            {/* 3. Estado de Éxito */}
             {!cargando && !errorRed && (
                 <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {rutinasFiltradas.map((rutina) => (
